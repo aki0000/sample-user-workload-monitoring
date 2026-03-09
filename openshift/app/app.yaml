@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: latency-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: latency-app
+  namespace: latency-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: latency-app
+  template:
+    metadata:
+      labels:
+        app: latency-app
+    spec:
+      containers:
+        - name: latency-app
+          image: quay.io/akhino/latency-app:v1.0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: latency-app
+  namespace: latency-app
+spec:
+  selector:
+    app: latency-app
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: latency-app
+  namespace: latency-app
+spec:
+  to:
+    kind: Service
+    name: latency-app
+  port:
+    targetPort: http
