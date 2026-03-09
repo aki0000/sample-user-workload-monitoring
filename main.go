@@ -5,8 +5,40 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+type statusWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (w *statusWriter) WriteHeader(code int) {
+	w.statusCode = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+var reqDuration = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "http_request_duration_seconds",
+		Help:    "HTTP request latency in seconds.",
+		Buckets: prometheus.DefBuckets,
+	},
+	[]string{"path", "method", "code"},
+)
+
+func instrument(path string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		sw := &statusWriter{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(sw, r)
+		reqDuration.WithLabelValues(path, r.Method, strconv.Itoa(sw.statusCode)).Observe(time.Since(start).Seconds())
+	})
+}
 
 func main() {
 	port := os.Getenv("PORT")
@@ -14,12 +46,14 @@ func main() {
 		port = "8080"
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+	prometheus.MustRegister(reqDuration)
+
+	rootHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		latency := time.Since(start)
-		_, _ = fmt.Fprintf(w, "hello from go on OCP\nlatency: %s\n", latency)
+		_, _ = fmt.Fprintln(w, "hello from go on OCP")
 	})
+	http.Handle("/", instrument("/", rootHandler))
+	http.Handle("/metrics", promhttp.Handler())
 
 	server := &http.Server{
 		Addr:              ":" + port,

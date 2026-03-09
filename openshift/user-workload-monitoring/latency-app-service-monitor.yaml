@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: latency-app
+  namespace: latency-app
+spec:
+  selector:
+    matchLabels:
+      app: latency-app
+  namespaceSelector:
+    matchNames:
+      - latency-app
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scheme: http
