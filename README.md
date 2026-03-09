@@ -24,8 +24,15 @@ latency: 1.4µs
 ## OCP (OpenShift) デプロイ
 
 1. イメージをビルドしてレジストリへPush（例: `quay.io`）
-2. `openshift/app/app.yaml` の `image` をPush先に変更
-3. 適用
+   - ノードが `amd64` の場合は以下（タグは毎回更新する）
+
+```bash
+podman build --platform linux/amd64 -t quay.io/akhino/latency-app:v1.0.1 ./
+podman push quay.io/akhino/latency-app:v1.0.1
+```
+
+1. `openshift/app/app.yaml` の `image` をPush先に変更
+2. 適用
 
 ```bash
 oc apply -f openshift/app/app.yaml
