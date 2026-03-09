@@ -21,7 +21,7 @@ spec:
       containers:
         - name: latency-app
           image: quay.io/akhino/latency-app:v1.0.0
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
