@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: latency-app
-          image: quay.io/akhino/latency-app:v1.0.1
+          image: quay.io/akhino/latency-app:v1.0.2
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -34,6 +34,8 @@ kind: Service
 metadata:
   name: latency-app
   namespace: latency-app
+  labels:
+    app: latency-app
 spec:
   selector:
     app: latency-app

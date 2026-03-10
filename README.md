@@ -43,3 +43,23 @@ Route URL 確認:
 ```bash
 oc get route latency-app -n latency-app
 ```
+
+## OpenShift User Workload Monitoring
+
+User Workload Monitoring を有効化:
+
+```bash
+oc apply -f openshift/user-workload-monitoring/cluster-monitoring-config-map.yaml
+```
+
+ServiceMonitor を作成:
+
+```bash
+oc apply -f openshift/user-workload-monitoring/latency-app-service-monitor.yaml
+```
+
+Prometheus で取得できるメトリクス:
+
+- `http_request_duration_seconds_bucket`
+- `http_request_duration_seconds_sum`
+- `http_request_duration_seconds_count`
